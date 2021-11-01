@@ -1,0 +1,141 @@
+---
+title: "Homework: Data Visualization"
+author: "Muxin Hua"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 3)
+```
+
+```{r load-sas-libraries, echo = F, message = F, warning = F}
+saspath <- "/usr/local/SASHome/SASFoundation/9.4/bin/sas_en" # Your SAS path goes here
+sasopts <- "-ls 75"
+
+# Please leave this in so that I can test it!
+# saspath <- "/usr/local/SASHome/SASFoundation/9.4/bin/sas_en" 
+# sasopts <- "-ls 75"
+knitr::opts_chunk$set(engine.path=list(sas=saspath, saslog=saspath, sashtml=saspath),
+                      engine.opts=list(sas=sasopts, saslog=sasopts, sashtml=sasopts), 
+                      comment=NA)
+library(SASmarkdown)
+```
+
+## Instructions
+
+When you are finished with the assignment:
+
+1. Save the file as 09_Lastname_Firstname.Rmd and compile it
+2. Commit the Rmd file and corresponding html file to your homework git repo
+3. Push the commit to github
+4. Locate the Rmd file on github and click on the SHA link for the file
+5. Paste the url of the resulting page into Canvas to submit your assignment.
+
+Your assignment must compile on a different computer as long as the saspath is set correctly for that machine.
+This means you will need to use a local file path when you read the data in via R (and SAS).
+
+## Swiss Banknotes
+
+The R package `mclust` contains a data set called banknote, consisting of (physical) measurements on 200 Swiss bank notes, 100 of which are genuine, while the other half is counterfeit. Load this data set (you might have to install the package) using the code below. 
+
+```{r}
+# install.packages("mclust")
+library(mclust) # if this throws an error of the form 'there is no package called mclust', uncomment the line above, run it once, then comment the line out again and run the code chunk again.
+data(banknote)
+banknote$Status <- factor(banknote$Status)
+```
+
+For each of the three figures you create below, write a two-three sentence summary, describing the structure of the plot: what type of plot is it? Which variables are mapped to x, to y, and to the (fill) color? What is the main message of the plot: what is your main finding, i.e. what do you want viewers to learn from the plot? Are there any anomalies or outliers?
+
+1. Use one of the object inspecting functions and interpret the result in the data that you see.
+```{r}
+library(RColorBrewer)
+summary(banknote)
+```
+
+There are equal number of counterfeit and genuine banknotes in this dataset. There are 7 variables, among which variable **Top** and **Bottom** have obvious outliers.   
+</br>
+2. Use `ggplot2` to draw a barchart of Status. Map Status to the fill color of the barchart.
+```{r}
+library(ggplot2)
+
+ggplot(aes(x=Status, fill=Status), data=banknote)+
+  geom_bar() +
+  scale_fill_manual(values = c("#CC9966","#666666"))
+```
+
+This is a bar chart mapping *Status* of banknote to x, and frequency of a status to y. Each status was assigned a color, #CC9966 is mapped to counterfeit banknotes and the #666666 is mapped to genuine ones. This plot indicates the number of genuine and counterfeit banknotes are the same in this dataset.  
+</br>
+3. Use `ggplot2` to draw a histogram of one of the variables in the dataset that shows a distinction between genuine and counterfeit banknotes. Use fill color to show this difference. Choose the binwidth such that there are no gaps in the middle range of the histogram.
+```{r}
+ggplot(banknote, aes(x=Diagonal, fill=Status))+
+  geom_histogram(bins = 15,
+                 color='black') +
+  scale_fill_manual(values = c("#CC9966","#666666"))
+```
+
+This is a histogram mapping *Diagonal* of banknote to x, and the count within a binsize of 1/3  to y. Each status was assigned a color, #CC9966 is mapped to counterfeit banknotes and the #666666 is mapped to genuine ones. This plot indicates more of genuine banknotes are tend to have a larger diagonal than the  counterfeit ones. There are few outliers for genuine banknotes, but that doesn't change the overall tendency.   
+</br>
+4. Use `ggplot2` to draw a scatterplot of two (continuous) measurements, color by Status. Try to find a pair of measurements that allow you to separate perfectly between genuine and counterfeit banknotes.
+```{r}
+ggplot(banknote, aes(x=Bottom, y=Top, color=Status, shape=Status))+
+  geom_point(size=3) +
+  scale_color_manual(values = c("#CC9966","#666666"))
+```
+
+This is a histogram mapping *Bottom* of banknotes to x, and *Top* of banknotes to y. Each status was assigned a color, #CC9966 is mapped to counterfeit banknotes and the #666666 is mapped to genuine ones. There are few outliers but this plot in general shows a boarderline in between, which can be used for differentiating counterfeit and genuine banknotes.   
+
+## Take everything you know, and use it for evil
+
+The textbook spent lots of time showing you how to create different types of graphics, but I spent a lot less time showing you all of the different ways you could customize graphics in both ggplot2 and SAS. In this problem, I want you to create the *ugliest* version of the following graphs you can, and then **explain why**, exactly, you made the decisions you did, and which principles of good graphics you've intentionally violated. 
+
+Ugliness is subjective, so the goal here is for you to explore the different ways you can customize the finer details of ggplot2 and SAS graphics. Make sure your finished masterpiece has appropriate axis labels and a title (after all, even ugly plots need to be correctly labeled!). You are free to add additional variables and layers, modify the aesthetics used, and leverage other packages. I have provided this code as a starting point, not as a way to limit your creativity.
+
+### Part 1: R
+I have provided some basic code to get you started. In R, we'll use the `palmerpenguins` package, which has [fantastic documentation with really awesome artwork](https://allisonhorst.github.io/palmerpenguins/). 
+
+```{r}
+if (!"palmerpenguins" %in% installed.packages()) {
+  remotes::install_github("allisonhorst/palmerpenguins")
+}
+library(palmerpenguins)
+library(ggplot2)
+
+head(penguins)
+
+ggplot(penguins, 
+       aes(x = body_mass_g/1000, y = bill_length_mm/10, color = species, fill=year),) +
+  geom_point(aes(size = species)) +
+  scale_color_manual(values = brewer.pal(7, "Reds")[c(4,5,6)]) +
+  ggtitle('Different penguin length vs body mass of different species of different years')
+```
+
+1, Make unnecessary scale to the variables, ignoring the meaning behind the variables.  
+2, Assign different categories with same tone of color-blind-unfriendly colors.  
+3, Use colors ordered in lightness mapping to non-ordered colors.  
+4, Map size of dots to non-order species.  
+5, Include meaningless variables.  
+
+
+### Part 2: SAS
+
+### SAS chunk not working, please refer to the SAS_code.sas file.
+
+1, Not specify the unit for x and y variables.  
+2, Despite intention of showing weight v.s. width and height but fail to show with the size of bubble.  
+3, Miss the point of weight vs. width (better show with linear lines to show tendency).  
+4, There are perception quirks in the plot (actually all bubbles are the same size).  
+5, All the bubbles are assigned without transparency, thus fail to show the data gathering or dispersion.  
+
+
+
+### Useful References
+
+- [Customizing ggplot2 graphics](http://r-statistics.co/Complete-Ggplot2-Tutorial-Part2-Customizing-Theme-With-R-Code.html)
+
+- [A group-created slideshow of awful graphics](https://docs.google.com/presentation/d/1ixRsGI8BWgT2zA5AbB61eMLUbJgObvBCZt-OnZDzvX4/edit?usp=sharing)
+
+- [PROC SGPLOT procedure options](https://documentation.sas.com/?docsetId=grstatproc&docsetTarget=p1lcbd3lhs3t3bn1jk6d8sjt2yqx.htm&docsetVersion=9.4&locale=en)
+
+
